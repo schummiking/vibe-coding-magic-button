@@ -83,6 +83,12 @@ server.on('request', (req, res) => {
     res.writeHead(200); res.end('ok');
     return;
   }
+  if (req.url === '/key/enter' && req.method === 'POST') {
+    console.log('[Key] ENTER');
+    if (vhidProcess && vhidProcess.stdin.writable) vhidProcess.stdin.write('enter\n');
+    res.writeHead(200); res.end('ok');
+    return;
+  }
   if (req.url === '/audio' && req.method === 'POST') {
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));

@@ -104,9 +104,16 @@ int main(void) {
         if (strncmp(line, "tap", 3) == 0) {
             // Simulate a full key press: down then up
             send_report(MOD, KEY);
-            usleep(150000); // 150ms hold — enough for Typeless to detect
+            usleep(150000); // 150ms hold
             send_report(0, 0);
             fprintf(stderr, "[vhid_key] Key TAP (down+up)\n");
+            fflush(stderr);
+        } else if (strncmp(line, "enter", 5) == 0) {
+            // Enter/Return key: HID usage 0x28, no modifier
+            send_report(0, 0x28);
+            usleep(100000); // 100ms hold
+            send_report(0, 0);
+            fprintf(stderr, "[vhid_key] ENTER\n");
             fflush(stderr);
         }
     }

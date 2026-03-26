@@ -13,6 +13,7 @@
 Open a webpage on your phone, tap a button, and:
 1. **A hardware-level keypress** is sent to your Mac (via Karabiner VirtualHID)
 2. **Your phone's microphone audio** streams to your Mac and plays through a USB audio device
+3. **A Submit (Enter) key** can be sent with a separate button — useful for confirming voice input
 
 This was built to remotely trigger [Typeless](https://typeless.so) (a voice-to-text app) from anywhere in the house — or even remotely via [Tailscale](https://tailscale.com). Typeless only accepts hardware HID keypresses and physical audio devices, so this project uses two tricks to satisfy those requirements.
 
@@ -38,6 +39,23 @@ The Mac-side C helper (`vhid_key`) communicates with Karabiner's VirtualHIDDevic
 
 ### The Audio Trick
 Some apps (like Typeless) reject virtual audio devices and only accept physical hardware microphones. To work around this, a cheap USB sound card with a 3.5mm loopback cable (output → input) creates a physical audio path. The phone's audio streams as raw PCM over HTTP, gets played to the USB card's output, travels through the cable, and re-enters as the card's microphone input — a legitimate hardware mic.
+
+**Hardware loopback wiring:**
+```
+USB Sound Card
+┌─────────────────────┐
+│                     │
+│  🔊 Output ──┐      │
+│              │      │     3.5mm male-to-male cable
+│              └──────────── connects output to input
+│              ┌──────────── (just one short cable!)
+│  🎤 Input  ──┘      │
+│                     │
+└─────────┬───────────┘
+          │ USB
+          ▼
+        Mac
+```
 
 **Note:** If your target app accepts virtual audio devices (like BlackHole), you don't need the USB sound card or loopback cable. Just change the audio output device in `server.js` to your virtual device name.
 
