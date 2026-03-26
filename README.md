@@ -53,7 +53,10 @@ Some apps (like Typeless) reject virtual audio devices and only accept physical 
 ### Hardware
 - A Mac (tested on Mac mini, macOS Ventura+)
 - Any phone with a modern browser (iPhone, Android, etc. — tested with Safari and Chrome)
-- *(Optional, for apps that reject virtual audio)* A USB external sound card with separate 3.5mm output and input jacks (~$5-10) + a 3.5mm male-to-male aux cable (~$2)
+- A USB external sound card with separate 3.5mm output and input jacks (~$5-10)
+- A 3.5mm male-to-male aux cable (~$2)
+
+> 💡 The USB sound card and aux cable are only needed if your target app rejects virtual audio devices (e.g. Typeless). See [The Audio Trick](#-the-audio-trick) for details.
 
 ### Software (Mac)
 - [Node.js](https://nodejs.org/) (v18+)
