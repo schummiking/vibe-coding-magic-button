@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vibe Coding Magic Button</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, sans-serif;
+    background: #1a1a2e; color: #eee;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100vh; -webkit-user-select: none;
+  }
+  #status { font-size:14px; color:#888; margin-bottom:40px; }
+  #status.ok { color:#4ade80; }
+  #status.err { color:#f87171; }
+  #btn {
+    width:200px; height:200px; border-radius:50%;
+    border:4px solid #333;
+    background: radial-gradient(circle at 30% 30%, #2d2d5e, #16213e);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; color:#888; cursor:pointer;
+    transition: all 0.15s; touch-action:manipulation;
+  }
+  #btn.active {
+    background: radial-gradient(circle at 30% 30%, #dc2626, #991b1b);
+    border-color:#ef4444; color:#fff; transform:scale(0.95);
+    box-shadow: 0 0 40px rgba(239,68,68,0.4);
+  }
+  #btn.off { opacity:0.3; pointer-events:none; }
+  #hint { margin-top:30px; font-size:12px; color:#555; }
+  #mic-toggle {
+    position: fixed; top: 20px; right: 20px;
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 2px solid #444; background: #222;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  #mic-toggle.on { border-color: #4ade80; background: #1a3a2e; }
+</style>
+</head>
+<body>
+<div id="mic-toggle">🎙️</div>
+<div id="status">Loading...</div>
+<div id="btn" class="off">Tap to Talk</div>
+<div id="hint">Tap 🎙️ to enable microphone</div>
+<script>
+const $ = id => document.getElementById(id);
+let mic = null, recording = false, connected = false;
+let audioCtx = null, sourceNode = null, processorNode = null;
+let sendQueue = Promise.resolve();
+let micActive = false;
+
+async function checkServer() {
+  try {
+    const r = await fetch('/ping');
+    if (r.ok) {
+      connected = true;
+      $('status').textContent = 'Connected ✓';
+      $('status').className = 'ok';
+      if (micActive) $('btn').classList.remove('off');
+      return;
+    }
+  } catch {}
+  connected = false;
+  $('status').textContent = 'Connection failed';
+  $('status').className = 'err';
+  setTimeout(checkServer, 3000);
+}
+
+async function activateMic() {
+  try {
+    mic = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+    sourceNode = audioCtx.createMediaStreamSource(mic);
+    processorNode = audioCtx.createScriptProcessor(4096, 1, 1);
+    processorNode.onaudioprocess = (e) => {
+      if (!recording) return;
+      sendPCM(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    sourceNode.connect(processorNode);
+    processorNode.connect(audioCtx.destination);
+
+    micActive = true;
+    $('mic-toggle').classList.add('on');
+    $('hint').textContent = 'Microphone active';
+    if (connected) $('btn').classList.remove('off');
+  } catch(e) {
+    $('hint').textContent = 'Microphone permission denied';
+  }
+}
+
+function deactivateMic() {
+  if (recording) {
+    recording = false;
+    $('btn').classList.remove('active');
+    $('btn').textContent = 'Tap to Talk';
+    fetch('/key/stop', { method: 'POST' }).catch(() => {});
+  }
+  if (processorNode) { processorNode.disconnect(); processorNode = null; }
+  if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  if (mic) { mic.getTracks().forEach(t => t.stop()); mic = null; }
+
+  micActive = false;
+  $('mic-toggle').classList.remove('on');
+  $('btn').classList.add('off');
+  $('hint').textContent = 'Tap 🎙️ to enable microphone';
+}
+
+$('mic-toggle').addEventListener('click', async () => {
+  if (micActive) {
+    deactivateMic();
+  } else {
+    await activateMic();
+  }
+});
+
+function sendPCM(float32Array) {
+  const int16 = new Int16Array(float32Array.length);
+  for (let i = 0; i < float32Array.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32Array[i]));
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  const blob = new Blob([int16.buffer], { type: 'application/octet-stream' });
+  sendQueue = sendQueue.then(() =>
+    fetch('/audio', { method: 'POST', body: blob }).catch(() => {})
+  );
+}
+
+$('btn').addEventListener('click', async () => {
+  if (!connected || !micActive) return;
+  if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+
+  if (!recording) {
+    recording = true;
+    $('btn').classList.add('active');
+    $('btn').textContent = '🎤 Listening...';
+    $('hint').textContent = 'Tap again to stop';
+    await fetch('/key/start', { method: 'POST' });
+  } else {
+    recording = false;
+    $('btn').classList.remove('active');
+    $('btn').textContent = 'Tap to Talk';
+    $('hint').textContent = 'Tap to start voice input';
+    await sendQueue;
+    await fetch('/key/stop', { method: 'POST' });
+  }
+});
+
+(async () => {
+  await checkServer();
+})();
+</script>
+</body>
+</html>

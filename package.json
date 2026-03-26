@@ -1,0 +1,15 @@
+{
+  "name": "vibe-coding-magic-button",
+  "version": "1.0.0",
+  "description": "Turn your iPhone into a wireless microphone and hotkey trigger for your Mac",
+  "main": "server.js",
+  "scripts": {
+    "start": "sudo node server.js"
+  },
+  "keywords": ["microphone", "remote", "typeless", "karabiner", "macos"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.20.0"
+  }
+}
