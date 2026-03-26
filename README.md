@@ -1,8 +1,14 @@
-# Vibe Coding Magic Button
+# 🪄 Vibe Coding Magic Button
 
-Turn your phone into a wireless microphone and hotkey trigger for your Mac — over Wi-Fi, with zero apps to install on the phone.
+> 🎤 Turn your phone into a wireless microphone and hotkey trigger for your Mac — over Wi-Fi, with zero apps to install on the phone.
 
-## What It Does
+<p align="center">
+  <img src="assets/screenshot-idle.png" width="250" alt="Idle state" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/screenshot-listening.png" width="250" alt="Listening state" />
+</p>
+
+## ✨ What It Does
 
 Open a webpage on your phone, tap a button, and:
 1. **A hardware-level keypress** is sent to your Mac (via Karabiner VirtualHID)
@@ -10,7 +16,7 @@ Open a webpage on your phone, tap a button, and:
 
 This was built to remotely trigger [Typeless](https://typeless.so) (a voice-to-text app) from anywhere in the house — or even remotely via [Tailscale](https://tailscale.com). Typeless only accepts hardware HID keypresses and physical audio devices, so this project uses two tricks to satisfy those requirements.
 
-## How It Works
+## 🔧 How It Works
 
 ```
 Phone Browser                          Mac
@@ -35,7 +41,7 @@ Some apps (like Typeless) reject virtual audio devices and only accept physical 
 
 **Note:** If your target app accepts virtual audio devices (like BlackHole), you don't need the USB sound card or loopback cable. Just change the audio output device in `server.js` to your virtual device name.
 
-## Requirements
+## 📋 Requirements
 
 ### Hardware
 - A Mac (tested on Mac mini, macOS Ventura+)
@@ -62,7 +68,7 @@ Some apps (like Typeless) reject virtual audio devices and only accept physical 
 ### Software (Phone)
 - Nothing. Just a browser.
 
-## Setup
+## 🚀 Setup
 
 ### 1. Clone and install
 ```bash
@@ -108,7 +114,7 @@ Plug the USB sound card into your Mac. Connect a 3.5mm aux cable from the card's
 ### 6. Configure your target app
 Select "USB Audio Device" (or your virtual audio device) as the microphone input in your target app.
 
-## Usage
+## 📱 Usage
 
 ### Start the server
 ```bash
@@ -122,7 +128,7 @@ Open `https://<your-mac-ip>:2000` in any browser. Tap 🎙️ to enable the micr
 ### Add to Home Screen (iOS)
 In Safari, tap Share → Add to Home Screen for an app-like experience.
 
-## Configuration
+## ⚙️ Configuration
 
 ### Change the trigger key
 Edit `vhid_key.c` — change `MOD` and `KEY` constants, then recompile with `cc -O2 -o vhid_key vhid_key.c`:
@@ -154,7 +160,7 @@ Edit `server.js` — change the sox output device name:
 ```
 Find your device name with: `system_profiler SPAudioDataType`
 
-## File Structure
+## 📁 File Structure
 ```
 vibe-coding-magic-button/
 ├── server.js          # HTTPS server, audio pipeline, key control
@@ -169,7 +175,7 @@ vibe-coding-magic-button/
 └── package.json
 ```
 
-## Limitations
+## ⚠️ Limitations
 
 - Requires the same network (Wi-Fi, Tailscale, or any VPN)
 - Phone browser asks for microphone permission on each page load (self-signed cert limitation)
@@ -177,6 +183,6 @@ vibe-coding-magic-button/
 - Server needs root privileges for VirtualHID access
 - macOS only (depends on Karabiner and CoreAudio)
 
-## License
+## 📄 License
 
 MIT
