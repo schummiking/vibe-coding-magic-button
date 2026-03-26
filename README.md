@@ -41,21 +41,10 @@ The Mac-side C helper (`vhid_key`) communicates with Karabiner's VirtualHIDDevic
 Some apps (like Typeless) reject virtual audio devices and only accept physical hardware microphones. To work around this, a cheap USB sound card with a 3.5mm loopback cable (output → input) creates a physical audio path. The phone's audio streams as raw PCM over HTTP, gets played to the USB card's output, travels through the cable, and re-enters as the card's microphone input — a legitimate hardware mic.
 
 **Hardware loopback wiring:**
-```
-USB Sound Card
-┌─────────────────────┐
-│                     │
-│  🔊 Output ──┐      │
-│              │      │     3.5mm male-to-male cable
-│              └──────────── connects output to input
-│              ┌──────────── (just one short cable!)
-│  🎤 Input  ──┘      │
-│                     │
-└─────────┬───────────┘
-          │ USB
-          ▼
-        Mac
-```
+
+<p align="center">
+  <img src="assets/audio-loopback.png" width="500" alt="Audio loopback wiring diagram" />
+</p>
 
 **Note:** If your target app accepts virtual audio devices (like BlackHole), you don't need the USB sound card or loopback cable. Just change the audio output device in `server.js` to your virtual device name.
 
