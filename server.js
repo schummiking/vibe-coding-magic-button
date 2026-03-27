@@ -89,6 +89,12 @@ server.on('request', (req, res) => {
     res.writeHead(200); res.end('ok');
     return;
   }
+  if (req.url === '/key/escape' && req.method === 'POST') {
+    console.log('[Key] ESCAPE');
+    if (vhidProcess && vhidProcess.stdin.writable) vhidProcess.stdin.write('escape\n');
+    res.writeHead(200); res.end('ok');
+    return;
+  }
   if (req.url === '/audio' && req.method === 'POST') {
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));

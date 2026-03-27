@@ -38,14 +38,18 @@
   }
   #talk-btn.off { opacity: 0.25; pointer-events: none; }
 
-  #enter-btn {
-    width: 160px; height: 48px; border-radius: 12px;
+  .bottom-btns { display: flex; gap: 16px; }
+
+  #enter-btn, #esc-btn {
+    width: 120px; height: 48px; border-radius: 12px;
     border: 2px solid #333;
-    background: linear-gradient(135deg, #1e3a5f, #16213e);
     display: flex; align-items: center; justify-content: center;
     font-size: 15px; color: #666; cursor: pointer;
     transition: all 0.12s; touch-action: manipulation;
     letter-spacing: 1px;
+  }
+  #enter-btn {
+    background: linear-gradient(135deg, #1e3a5f, #16213e);
   }
   #enter-btn:active {
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -54,6 +58,17 @@
     box-shadow: 0 0 20px rgba(59,130,246,0.3);
   }
   #enter-btn.off { opacity: 0.25; pointer-events: none; }
+
+  #esc-btn {
+    background: linear-gradient(135deg, #3a1e1e, #2e1616);
+  }
+  #esc-btn:active {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #ef4444; color: #fff;
+    transform: scale(0.95);
+    box-shadow: 0 0 20px rgba(239,68,68,0.3);
+  }
+  #esc-btn.off { opacity: 0.25; pointer-events: none; }
 
   #hint { margin-top: 20px; font-size: 11px; color: #444; text-align: center; }
 
@@ -73,7 +88,10 @@
 <div id="status">Loading...</div>
 <div class="buttons">
   <div id="talk-btn" class="off">Tap to Talk</div>
-  <div id="enter-btn" class="off">⏎ Submit</div>
+  <div class="bottom-btns">
+    <div id="esc-btn" class="off">✕ ESC</div>
+    <div id="enter-btn" class="off">⏎ Submit</div>
+  </div>
 </div>
 <div id="hint">Tap 🎙️ to enable microphone</div>
 <script>
@@ -91,6 +109,7 @@ async function checkServer() {
       $('status').textContent = 'Connected ✓';
       $('status').className = 'ok';
       $('enter-btn').classList.remove('off');
+      $('esc-btn').classList.remove('off');
       if (micActive) $('talk-btn').classList.remove('off');
       return;
     }
@@ -186,6 +205,22 @@ $('enter-btn').addEventListener('click', async () => {
   setTimeout(() => {
     $('enter-btn').style.background = '';
     $('enter-btn').style.color = '';
+  }, 200);
+});
+
+// Escape button — always resets recording state
+$('esc-btn').addEventListener('click', async () => {
+  if (!connected) return;
+  recording = false;
+  $('talk-btn').classList.remove('active');
+  $('talk-btn').textContent = 'Tap to Talk';
+  $('hint').textContent = 'Tap to start voice input';
+  $('esc-btn').style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+  $('esc-btn').style.color = '#fff';
+  await fetch('/key/escape', { method: 'POST' });
+  setTimeout(() => {
+    $('esc-btn').style.background = '';
+    $('esc-btn').style.color = '';
   }, 200);
 });
 

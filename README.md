@@ -14,6 +14,7 @@ Open a webpage on your phone, tap a button, and:
 1. **A hardware-level keypress** is sent to your Mac (via Karabiner VirtualHID)
 2. **Your phone's microphone audio** streams to your Mac and plays through a USB audio device
 3. **A Submit (Enter) key** can be sent with a separate button — useful for confirming voice input
+4. **An Escape key** can cancel/discard the current transcription mid-speech
 
 This was built to remotely trigger [Typeless](https://typeless.so) (a voice-to-text app) from anywhere in the house — or even remotely via [Tailscale](https://tailscale.com). Typeless only accepts hardware HID keypresses and physical audio devices, so this project uses two tricks to satisfy those requirements.
 
@@ -25,8 +26,9 @@ Phone Browser                          Mac
 │  Web page (HTTPS) │   HTTP POST     │  Node.js Server (:2000)      │
 │                  │ ─────────────→   │                              │
 │  [🎤 Tap to Talk] │  /key/start     │  vhid_key → Karabiner VHID  │
-│                  │  /key/stop       │  → macOS treats as real key  │
-│                  │                  │                              │
+│  [⏎ Submit]      │  /key/stop      │  → macOS treats as real key  │
+│  [✕ ESC]         │  /key/enter     │                              │
+│                  │  /key/escape    │                              │
 │  getUserMedia()  │  /audio (PCM)    │  sox → USB sound card output │
 │  ScriptProcessor │ ─────────────→   │  → loopback cable            │
 │                  │                  │  → USB sound card input      │
@@ -156,6 +158,8 @@ Common alternatives:
 | Right Control | 0x10 | 0xE4 |
 | Left Command | 0x08 | 0xE3 |
 | F5 | 0x00 | 0x3E |
+| Escape | 0x00 | 0x29 |
+| Enter/Return | 0x00 | 0x28 |
 
 ### Change the port
 Edit `server.js`:

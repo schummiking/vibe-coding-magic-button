@@ -115,6 +115,13 @@ int main(void) {
             send_report(0, 0);
             fprintf(stderr, "[vhid_key] ENTER\n");
             fflush(stderr);
+        } else if (strncmp(line, "escape", 6) == 0) {
+            // Escape key: HID usage 0x29, no modifier
+            send_report(0, 0x29);
+            usleep(100000); // 100ms hold
+            send_report(0, 0);
+            fprintf(stderr, "[vhid_key] ESCAPE\n");
+            fflush(stderr);
         }
     }
 
