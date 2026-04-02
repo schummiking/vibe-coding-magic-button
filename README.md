@@ -134,6 +134,20 @@ sudo node server.js
 ```
 Root is required for Karabiner VirtualHID socket access.
 
+### Start the server from the project script
+Keep the real startup logic in the repo, not on the Desktop:
+```bash
+./Start\ Vibe\ Coding\ Magic\ Button.command
+```
+This script requests administrator permission, starts the service in the background, and writes startup logs to `vibe-button.log`.
+
+### Optional Desktop shortcut
+If you want a Desktop launcher, make it a symlink to the project script so there is only one source of truth:
+```bash
+ln -sf "/Users/schummiking/Projects/Vibe Coding Magic Button/Start Vibe Coding Magic Button.command" \
+  "$HOME/Desktop/Start Vibe Coding Magic Button.command"
+```
+
 ### On your phone
 Open `https://<your-mac-ip>:2000` in any browser. Tap 🎙️ to enable the microphone, then tap the big button to start/stop.
 

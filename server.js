@@ -14,16 +14,69 @@ const server = https.createServer({
 
 // ─── VirtualHID ───
 let vhidProcess = null;
+let vhidReady = false;
+
 function initVhid() {
+  if (vhidProcess && !vhidProcess.killed) return;
+
+  vhidReady = false;
   vhidProcess = spawn(path.join(__dirname, 'vhid_key'), [], {
     stdio: ['pipe', 'ignore', 'pipe']
   });
-  vhidProcess.stderr.on('data', d => process.stderr.write(d));
-  vhidProcess.on('error', e => console.error('[VHID]', e.message));
-  vhidProcess.on('close', c => { console.log('[VHID] exited', c); vhidProcess = null; });
+
+  let stderrBuffer = '';
+  vhidProcess.stderr.on('data', d => {
+    const text = d.toString();
+    process.stderr.write(d);
+    stderrBuffer += text;
+
+    while (stderrBuffer.includes('\n')) {
+      const idx = stderrBuffer.indexOf('\n');
+      const line = stderrBuffer.slice(0, idx).trim();
+      stderrBuffer = stderrBuffer.slice(idx + 1);
+      if (line.includes('Keyboard ready')) {
+        vhidReady = true;
+      }
+    }
+  });
+
+  vhidProcess.on('error', e => {
+    console.error('[VHID]', e.message);
+  });
+
+  vhidProcess.on('close', c => {
+    console.log('[VHID] exited', c);
+    vhidProcess = null;
+    vhidReady = false;
+  });
 }
-function keyTap() {
-  if (vhidProcess && vhidProcess.stdin.writable) vhidProcess.stdin.write('tap\n');
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForVhidReady(timeoutMs = 10000) {
+  initVhid();
+
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (vhidReady && vhidProcess && vhidProcess.stdin.writable) return true;
+    if (!vhidProcess || vhidProcess.killed) initVhid();
+    await sleep(100);
+  }
+
+  console.warn('[VHID] ready timeout');
+  return false;
+}
+
+async function sendVhid(command) {
+  const ready = await waitForVhidReady();
+  if (!ready || !vhidProcess || !vhidProcess.stdin.writable) {
+    console.error(`[VHID] unable to send ${command}`);
+    return false;
+  }
+  vhidProcess.stdin.write(`${command}\n`);
+  return true;
 }
 
 // ─── Audio (persistent sox process) ───
@@ -71,28 +124,36 @@ server.on('request', (req, res) => {
   }
   if (req.url === '/key/start' && req.method === 'POST') {
     console.log('[Key] TAP start');
-    keyTap();
-    ensureAudio();
-    res.writeHead(200); res.end('ok');
+    (async () => {
+      await sendVhid('tap');
+      ensureAudio();
+      res.writeHead(200); res.end('ok');
+    })();
     return;
   }
   if (req.url === '/key/stop' && req.method === 'POST') {
     console.log('[Key] TAP stop');
-    keyTap();
-    // Don't kill sox — keep it running for next session
-    res.writeHead(200); res.end('ok');
+    (async () => {
+      await sendVhid('tap');
+      // Don't kill sox — keep it running for next session
+      res.writeHead(200); res.end('ok');
+    })();
     return;
   }
   if (req.url === '/key/enter' && req.method === 'POST') {
     console.log('[Key] ENTER');
-    if (vhidProcess && vhidProcess.stdin.writable) vhidProcess.stdin.write('enter\n');
-    res.writeHead(200); res.end('ok');
+    (async () => {
+      await sendVhid('enter');
+      res.writeHead(200); res.end('ok');
+    })();
     return;
   }
   if (req.url === '/key/escape' && req.method === 'POST') {
     console.log('[Key] ESCAPE');
-    if (vhidProcess && vhidProcess.stdin.writable) vhidProcess.stdin.write('escape\n');
-    res.writeHead(200); res.end('ok');
+    (async () => {
+      await sendVhid('escape');
+      res.writeHead(200); res.end('ok');
+    })();
     return;
   }
   if (req.url === '/audio' && req.method === 'POST') {
@@ -127,11 +188,10 @@ process.on('uncaughtException', err => {
 
 if (process.getuid() !== 0) { console.error('sudo node server.js'); process.exit(1); }
 
-console.log('[VHID] Starting...');
-initVhid();
-
 const ip = getLocalIP();
 server.listen(PORT, '0.0.0.0', () => {
+  console.log('[VHID] Starting...');
+  initVhid();
   console.log(`\n✅ Vibe Coding Magic Button started`);
   console.log(`📱 iPhone: https://${ip}:${PORT}`);
   console.log(`🎤 Audio: USB Audio Device`);
