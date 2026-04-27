@@ -139,13 +139,26 @@ Keep the real startup logic in the repo, not on the Desktop:
 ```bash
 ./Start\ Vibe\ Coding\ Magic\ Button.command
 ```
-This script requests administrator permission, starts the service in the background, and writes startup logs to `vibe-button.log`.
+This script requests administrator permission, installs or updates a `launchd` service, and starts it under `system/com.vibecoding.vibe-coding-magic-button`. Logs are written to `vibe-button.log`.
+
+### Stop the launchd service
+```bash
+./Stop\ Vibe\ Coding\ Magic\ Button.command
+```
+This unloads the `launchd` service so it stops listening on port `2000`.
 
 ### Optional Desktop shortcut
 If you want a Desktop launcher, make it a symlink to the project script so there is only one source of truth:
 ```bash
-ln -sf "/Users/schummiking/Projects/Vibe Coding Magic Button/Start Vibe Coding Magic Button.command" \
+PROJECT_DIR="$(pwd)"
+ln -sf "$PROJECT_DIR/Start Vibe Coding Magic Button.command" \
   "$HOME/Desktop/Start Vibe Coding Magic Button.command"
+```
+You can do the same for the stop script:
+```bash
+PROJECT_DIR="$(pwd)"
+ln -sf "$PROJECT_DIR/Stop Vibe Coding Magic Button.command" \
+  "$HOME/Desktop/Stop Vibe Coding Magic Button.command"
 ```
 
 ### On your phone

@@ -3,6 +3,7 @@ certs/
 public/rootCA.pem
 vhid_key
 vibe-button.log
+com.*.vibe-coding-magic-button.plist
 
 PLAN.md
 .DS_Store
