@@ -95,15 +95,15 @@ int main(void) {
     if (getuid() != 0) { fprintf(stderr, "Need root\n"); return 1; }
     if (init() < 0) return 1;
 
-    // Left Option/Alt: HID usage 0xE2, modifier bit 0x04
+    // Left Option/Alt is represented by the modifier byte. Do not also put
+    // modifier usages in the key array; some low-level listeners reject that.
     const uint8_t MOD = 0x04;
-    const uint16_t KEY = 0xE2;
 
     char line[64];
     while (fgets(line, sizeof(line), stdin)) {
         if (strncmp(line, "tap", 3) == 0) {
             // Simulate a full key press: down then up
-            send_report(MOD, KEY);
+            send_report(MOD, 0);
             usleep(150000); // 150ms hold
             send_report(0, 0);
             fprintf(stderr, "[vhid_key] Key TAP (down+up)\n");
